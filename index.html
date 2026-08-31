@@ -3,7 +3,7 @@
   
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="game.css">
 
@@ -11,45 +11,44 @@
   </head>
 
   <body>
-    <div class="msg-container">
-      <h1>TIC TAC TOE</h1>
-      <p id="msg" class="hide">Winner : </p>
-      <button id="reset">Reset Game</button>
-    </div>
-    <div class="game-container">
-
-      <div class="info-player">
-        <p id="turn">Next Turn : X </p>
-
-        <p>Player X : <span id="score-x">0</span></p>
-        <p>Player O : <span id="score-o">0</span></P>
+      <div class="msg-container">
+        <h1>TIC TAC TOE</h1>
+        <p id="msg" class="hide">Winner : </p>
+        <button id="reset">Next Game</button>
       </div>
+      <div class="game-container">
 
-      <div class="container">
-        <div class="box-main">
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-          <button class="box"></button>
-        </div>
+       <div class="info-player">
+         <p id="turn">Next Turn : X </p>
 
-        <button id="new-btn">New Game</button>
+         <p>Player X : <span id="score-x">0</span></p>
+         <p>Player O : <span id="score-o">0</span></P>
+       </div>
 
-      </div>
+       <div class="container">
+         <div class="box-main">
+           <button class="box"></button>
+           <button class="box"></button>
+           <button class="box"></button>
+           <button class="box"></button>
+           <button class="box"></button>
+           <button class="box"></button>
+           <button class="box"></button>
+           <button class="box"></button>
+           <button class="box"></button>
+         </div>
 
-      <div class="history">
-        <h3>History </h3>
+         <button id="new-btn">New Game</button>
+       </div>
 
-        <div id="history-list">
-          <p>Go to game start</p>
-        </div>
-      </div>
-    </div>
+       <div class="history">
+         <h3>History </h3>
+
+         <div id="history-list">
+           <p>Go to game start</p>
+         </div>
+       </div>
+     </div>
 
     <script src="script.js"></script>
     

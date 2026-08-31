@@ -3,7 +3,7 @@ let msg = document.querySelector("#msg"); //mencari elemen html id="msg"
 let newBtn = document.querySelector("#new-btn");
 let resetBtn = document.querySelector("#reset");
 let turnText = document.querySelector("#turn");
-let scoreX = document.querySelector("#score-x"); //socreX menunjuk ke elemen HTML tempat angka itu ditampilkan
+let scoreX = document.querySelector("#score-x"); //scoreX menunjuk ke elemen HTML tempat angka itu ditampilkan
 let scoreO = document.querySelector("#score-o");
 let historyList = document.querySelector("#history-list");
 
@@ -13,6 +13,7 @@ let xScore = 0; //xScore menyimpan angka score di JavaScript.
 let oScore = 0;
 let moveNumber = 0;
 let roundNumber = 1; //perhitungan round
+let historyStates = []; //menyimpan keadaan game di setiap langkah
 
 let winPatterns = [
     [0, 1, 2], // win samping
@@ -25,125 +26,338 @@ let winPatterns = [
     [2, 4, 6]
 ];
 
+
+// MENYIMPAN KEADAAN GAME
+const saveGameState = () => {
+    return {
+        board: Array.from(boxes).map((box) => box.innerText),
+        turnO: turnO,
+        gameOver: gameOver,
+        xScore: xScore,
+        oScore: oScore,
+        moveNumber: moveNumber,
+        roundNumber: roundNumber
+    };
+};
+
+// kembali ke history yang di klik
+const goToHistory = (index) => {
+    let state = historyStates[index];
+
+    if (!state) {
+        return;
+    }
+    // kembalikan isi papan
+    boxes.forEach((box, i) => {
+        box.innerText = state.board[i];
+
+        box.classList.remove("x", "o");
+
+        if (state.board[i] === "X") {
+            box.classList.add("x");
+        } else if (state.board[i] === "O") {
+            box.classList.add("o");
+        }
+
+        // kotak yang sudah terisi dikunci
+        box.disabled = state.board[i] !== "";
+    });
+
+    // kembalikan semua data di game
+    turnO = state.turnO;
+    gameOver = state.gameOver;
+    xScore = state.xScore;
+    oScore = state.oScore;
+    moveNumber = state.moveNumber;
+    roundNumber = state.roundNumber;
+
+    // kembalikan score yang tampilkan
+    scoreX.innerText = xScore;
+    scoreO.innerText = oScore;
+
+    // kembalikan tulisan next turn
+    turnText.innerText = `Next Turn : ${turnO ? "O" : "X"}`;
+
+    // kembalikan pesan winner atau draw
+    if (state.result === "win") {
+        msg.innerText = `Winner : ${state.winner}`;
+        msg.classList.remove("hide");
+    } else if (state.result === "draw") {
+        msg.innerText = "SERIII Draw!";
+        msg.classList.remove("hide");
+    } else {
+        msg.classList.add("hide"); 
+    }
+
+    // Buang semua history setelah langkah yang dipilih
+    historyStates = historyStates.slice(0, index + 1);
+
+    renderHistory();
+};
+
+// MENAMPILKAN HISTORY
+const renderHistory = () => {
+    historyList.innerHTML = "";
+    // dari go to game start
+    let startItem = document.createElement("p");
+    startItem.innerText = "Go to game start";
+    startItem.style.cursor = "pointer";
+
+    startItem.addEventListener("click", () => {
+        goToHistory(0);
+    });
+
+    historyList.appendChild(startItem);
+    let lastRound = null;
+    historyStates.forEach((state, index) => {
+        // state pertama adalah kondisi awal game
+        if (index === 0) {
+            return;
+        }
+
+        // MENAMPILKAN RONDE
+        if (state.roundNumber !== lastRound) {
+            let roundItem = document.createElement("p"); //<p></p>
+            roundItem.innerText = `Ronde ${state.roundNumber}`;
+
+            historyList.appendChild(roundItem);
+
+            lastRound = state.roundNumber;
+        }
+        // penanda awal ronde 
+        if (state.isRoundStart) {
+            return;
+        }
+
+        // MENAMPILKAN LANGKAH
+        let historyItem = document.createElement("p");
+
+        historyItem.innerText =
+            `${state.moveNumber}. ${state.player} >> #${state.boxIndex + 1}`;
+
+        historyItem.style.cursor = "pointer";
+        // saat langkah diklik, kembali ke langkah tersebut
+        historyItem.addEventListener("click", () => {
+            goToHistory(index);
+        });
+
+        historyList.appendChild(historyItem);
+
+        // MENAMPILKAN HASIL MENANG
+        if (state.result === "win") {
+            let finishItem = document.createElement("p");
+
+            finishItem.innerText =
+                `Ronde ${state.roundNumber} selesai — ${state.winner} menang`;
+
+            finishItem.style.cursor = "pointer";
+            finishItem.addEventListener("click", () => {
+                goToHistory(index);
+            });
+
+            historyList.appendChild(finishItem);
+        }
+
+        // MENAMPILKAN HASIL DRAW
+        if (state.result === "draw") {
+            let finishItem = document.createElement("p");
+
+            finishItem.innerText =
+                `Ronde ${state.roundNumber} selesai — Draw`;
+            finishItem.style.cursor = "pointer";
+            finishItem.addEventListener("click", () => {
+                goToHistory(index);
+            });
+
+            historyList.appendChild(finishItem);
+        }
+    });
+
+    historyList.scrollTop = historyList.scrollHeight;
+};
+
+// MENCARI PEMENANG
 const cekWinner = () => {
-    for (let pattern of winPatterns) { 
-        let pos1 = pattern[0]; //[0, 4, 8] mengecek apakah ada kotak berisi tanda yg sama
+    for (let pattern of winPatterns) {
+        let pos1 = pattern[0];
         let pos2 = pattern[1];
         let pos3 = pattern[2];
 
-        let val1 = boxes[pos1].innerText; //vall itu value
-        let val2 = boxes[pos2].innerText; //kalau val1, val2, dan val3 sama, berarti ada pemenang
-        let val3 = boxes[pos3].innerText; 
+        let val1 = boxes[pos1].innerText;
+        let val2 = boxes[pos2].innerText;
+        let val3 = boxes[pos3].innerText;
 
-        if (val1 !== "" && val1 === val2 && val2 === val3) { //val1 !== "" artinya val1 tidak kosong
-         console.log("Winner!", val1); //return digunakan untuk menghentikan fungsi yang sedang berjalan
-         msg.innerText = `Winner : ${val1}`; //Masukkan tulisan Winner : lalu masukkan isi val1 ke dalam elemen msg
-         msg.classList.remove("hide");
-         gameOver = true;
+        if (val1 !== "" && val1 === val2 && val2 === val3) {
+            console.log("Winner!", val1);
 
-         if (val1 === "X") {
-            xScore++;
-            scoreX.innerText = xScore;
-         } else {
-            oScore++;
-            scoreO.innerText = oScore;
-         }
-         
-         let historyItem = document.createElement("p");
-         historyItem.innerText = `Ronde ${roundNumber} selesai — ${val1} menang`;
-         historyList.appendChild(historyItem);
+            msg.innerText = `Winner : ${val1}`;
+            msg.classList.remove("hide");
 
-         return;
+            gameOver = true;
+
+            if (val1 === "X") {
+                xScore++;
+                scoreX.innerText = xScore;
+            } else {
+                oScore++;
+                scoreO.innerText = oScore;
+            }
+            // mengembalikan siapa pemenangnya
+            return val1;
         }
-    }  
+    }
+
+    return null;
 };
 
-const cekDraw = () => { //mencari hasil seri
+
+// MENCARI HASIL SERI
+const cekDraw = () => {
     let semuaTerisi = true;
 
-    boxes.forEach((box) => { //memeriksa kotak satu persatu
-        if (box.innerText === "") { //mengecek apakah semua kotak sudah terisi atau belum
+    boxes.forEach((box) => {
+        if (box.innerText === "") {
             semuaTerisi = false;
         }
     });
 
-    if (semuaTerisi && !gameOver) { //kalau semua kotak sudah terisi DAN game belum selesai karena winner
-        msg.innerText = "SERIII Draw!"; //output !Draw
-        msg.classList.remove("hide"); 
-        gameOver = true; 
+    if (semuaTerisi && !gameOver) {
+        msg.innerText = "SERIII Draw!";
+        msg.classList.remove("hide");
+
+        gameOver = true;
+
+        return true;
     }
+
+    return false;
 };
 
+// RESET GAME
 const resetGame = () => {
     turnO = false;
     gameOver = false;
     moveNumber = 0;
-    roundNumber++; // di taruh disini krn permainan yang tadi sudah selesai, sekarang kita mulai ronde berikutnya
+    roundNumber++; //permainan berikutnya masuk ronde baru
 
     turnText.innerText = "Next Turn : X";
 
-    boxes.forEach((box) => { //mengosongkan semua kotak
+    boxes.forEach((box) => {
         box.innerText = "";
         box.disabled = false;
         box.classList.remove("x", "o");
     });
 
     msg.classList.add("hide");
+
+
+    // Simpan kondisi awal ronde baru
+    let newRoundState = saveGameState();
+    newRoundState.isRoundStart = true;
+    historyStates.push(newRoundState);
+    renderHistory();
 };
 
-const newGame = () => {
-    resetGame();
 
+// NEW GAME
+const newGame = () => {
+    // Mengembalikan semua data seperti game baru
+    turnO = false;
+    gameOver = false;
+    moveNumber = 0;
     roundNumber = 1;
 
-    xScore = 0; //digunakan untuk menghapus score
+    xScore = 0;
     oScore = 0;
 
-    scoreX.innerText = xScore; //angka yang terlihat di layar
+    scoreX.innerText = xScore;
     scoreO.innerText = oScore;
 
-    historyList.innerHTML = "<p>Go to game start</p>"; //membuat game baru 
+    turnText.innerText = "Next Turn : X";
+
+    boxes.forEach((box) => {
+        box.innerText = "";
+        box.disabled = false;
+        box.classList.remove("x", "o");
+    });
+
+    msg.classList.add("hide");
+
+    // Hapus seluruh history lama
+    historyStates = [];
+
+    // Simpan kondisi awal game
+    historyStates.push(saveGameState());
+
+    renderHistory();
 };
 
-resetBtn.addEventListener ("click", resetGame);
-newBtn.addEventListener ("click", newGame);
+resetBtn.addEventListener("click", resetGame);
+newBtn.addEventListener("click", newGame);
 
-//POSISI BOX
-boxes.forEach((box, index) => { //boc : kotak yg di proses, index : nomor index dr kotak tsb
-    box.addEventListener ("click", () => { //saat kotak di click, akan menjalankan kode
+// POSISI BOX
+boxes.forEach((box, index) => {
+    box.addEventListener("click", () => {
+
         if (gameOver) {
             return;
         }
-        
+
+        let currentPlayer;
+
+
         if (turnO) {
-          box.innerText = "O";
-          box.classList.add("o"); //Misalnya O masuk ke kotak #4 => <button class="box 0">O</button> . begitu juga sebaliknya
-          turnO = false;
-          turnText.innerText = "Next Turn : X"; //history
+            box.innerText = "O";
+            box.classList.add("o");
+            currentPlayer = "O";
+
+            turnO = false;
+            turnText.innerText = "Next Turn : X";
+
         } else {
-          box.innerText = "X";
-          box.classList.add("x");
-          turnO = true;
-          turnText.innerText = "Next Turn : O";
+            box.innerText = "X";
+            box.classList.add("x");
+            currentPlayer = "X";
+
+            turnO = true;
+            turnText.innerText = "Next Turn : O";
         }
 
-        moveNumber++; //setiap pemain melakukan langkah, angka bertambah
+        moveNumber++;
 
-        box.disabled = true; //digunakan untuk mengunci jawaban
+        box.disabled = true;
+        // Cek apakah ada pemenang
+        let winner = cekWinner();
 
-        if (moveNumber === 1) {
-         let roundItem = document.createElement("p");
-         roundItem.innerText = `Ronde ${roundNumber}`;
-         historyList.appendChild(roundItem);
+        // Cek apakah hasilnya draw
+        let draw = cekDraw();
+
+
+        // Simpan keadaan game setelah langkah dilakukan
+        let currentState = saveGameState();
+
+        currentState.player = currentPlayer;
+        currentState.boxIndex = index;
+
+        // Kalau menang
+        if (winner) {
+            currentState.result = "win";
+            currentState.winner = winner;
         }
 
-        let historyItem = document.createElement("p"); //membuat <p></p>
-        historyItem.innerText = `${moveNumber}. ${box.innerText} >> #${index + 1}`;
-        historyList.appendChild(historyItem);
-        historyList.scrollTop = historyList.scrollHeight; //scroll otomatis ke bawah 
+        // Kalau draw
+        if (draw) {
+            currentState.result = "draw";
+        }
+ 
+        // Simpan history
+        historyStates.push(currentState);
 
-        cekWinner();
-        cekDraw();
+        renderHistory();
     });
 });
 
+// MENYIMPAN KONDISI AWAL GAME
+historyStates.push(saveGameState());
+
+renderHistory();
