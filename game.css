@@ -1,4 +1,7 @@
 /*judul, winner, new game*/
+* {
+  box-sizing: border-box;
+}
 body {
   background-color: #fffbd1;
   text-align: center;
@@ -100,18 +103,22 @@ body {
   align-items: flex-start;
   gap: 50px;
 }
-.info-player {
-  text-align: left;
-
-}
 .history {
   text-align: left;
 }
 .info-player {
-  text-align: left;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+
+  margin-bottom: 8px;
+  transform: translateX(-57px);
 }
 .info-player p {
-  margin: 8px 0px;
+  margin: 0px;
+}
+.turn-player {
+  text-align: left;
 }
 #turn {
   margin-top: 25px;
@@ -131,4 +138,11 @@ body {
 #history-list {
   max-height: 250px;
   overflow-y: auto;
+}
+
+/*agar tampilan tidak berubah di dekstop namun berubah di hp*/
+@media (max-width: 768px) {
+  .msg-container {
+    transform: none;
+  }
 }
