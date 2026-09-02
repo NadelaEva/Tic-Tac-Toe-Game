@@ -146,19 +146,5 @@ body {
     transform: none;
   }
 
-  .box-main {
-    grid-template-columns: repeat(3, 30vw);
-  }
-
-  .box-main button {
-   width: 30vw;
-   height: 30vw;
-  }
-
-  .game-container {
-   flex-direction: column;
-   align-items: center;
-  }
-
 }
 
