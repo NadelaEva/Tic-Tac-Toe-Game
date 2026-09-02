@@ -145,4 +145,9 @@ body {
   .msg-container {
     transform: none;
   }
+
+  .box-main {
+    grid-template-columns: repeat(3, 30vw);
+  }
 }
+
